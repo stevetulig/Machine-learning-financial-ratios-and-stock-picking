@@ -45,40 +45,15 @@ def extractYearData(forecastYear, cnxn):
     # merge the 2 dataframes
     stockReturns=df4.merge(df5,on='StockID')
     stockReturns['Return']=stockReturns['TR1']/stockReturns['TR0']-1
-
-    # extract the market return for the year
-    # first, the TR index from end of December in the previous year
-    strQry6='select PriceDate,  AccumIndex as TR0 from SP200Data where PriceDate='+\
-            '(select max(PriceDate) from tradingdays where year(PriceDate)='+str(forecastYear-1)+')'
-    df6=pd.read_sql(strQry6,cnxn)
-    # next, the TR index from end of December in the forecast year
-    strQry7='select PriceDate,  AccumIndex as TR1 from SP200Data where PriceDate='+\
-            '(select max(PriceDate) from tradingdays where year(PriceDate)='+str(forecastYear)+')'
-    df7=pd.read_sql(strQry7,cnxn)
-    # finally, calculate the market return for the year
-    benchmarkReturn=df7['TR1']/df6['TR0']-1
-
-    # create the target variable: outperform=1 if the stock return exceeds the benchmark return, otherwise 0
-    stockReturns['Outperform']=0
-    stockReturns.loc[stockReturns.Return>benchmarkReturn.item(),'Outperform']=1
-    #stockReturns.drop(columns=['TR0','TR1','Return'],inplace=True)
     stockReturns.drop(columns=['TR0','TR1'],inplace=True)
-    # now merge the target variable with the features
     allData=features.merge(stockReturns,on='StockID')
 
-    # alternative target variable: above/below median return
+    # create the target variable: HighReturn=1 if the stock return is above the median
     allData['HighReturn']=0
-#    mid=stockReturns['Return'].median()
     allData.loc[allData.Return>allData['Return'].median(),'HighReturn']=1
     
-    # alternative target variable: return tercile
-    allData['HighReturn3']=1
-    allData.loc[allData.Return>allData['Return'].quantile(q=0.67),'HighReturn3']=2
-    allData.loc[allData.Return<allData['Return'].quantile(q=0.33),'HighReturn3']=0
-    #allData.drop(columns=['Return'],inplace=True)
-
     #trim outliers; as defined per standard box plot definition (i.e. outside of 1st & 3rd quartiles +/- 1.5* i/q range)
-    tempdf=allData.drop(columns=['StockID', 'ForecastYear','Outperform', 'HighReturn', 'HighReturn3'])
+    tempdf=allData.drop(columns=['StockID', 'ForecastYear', 'HighReturn'])
     q1=tempdf.quantile(0.25)
     q3=tempdf.quantile(0.75)
     iqr=q3-q1
