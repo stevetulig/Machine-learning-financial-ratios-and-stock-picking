@@ -8,5 +8,4 @@ Generally, the models don't work as well as a naive model which doesn't require 
 The data used comes from a SQL-Server database. For other preliminary work relating
 to this database see the repository https://github.com/stevetulig/SQL-Server-database-details-queries-for-ratio-manipulation
 
-The data needs to be updated.
-A few other ratios need to be added pertaining to Accruals, Distance to Default, and more valuation-relevant ratios
+The data needs to be updated, and other ratios need to be added pertaining to valuation models.
